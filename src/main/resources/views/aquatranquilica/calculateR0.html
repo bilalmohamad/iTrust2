@@ -1,0 +1,46 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{::script})">
+<title>Calculate R0 Value</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+	    /* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+	    /*<![CDATA[*/
+	    var app = angular.module("calculateR0App", []);
+	    app.controller("calculateR0Ctrl", function($scope, $http) {
+
+	    $scope.message = "";
+	    $scope.errorMsg = "";
+	    
+	    $scope.displayR0 = function() {
+	    	$http.get("/iTrust2/api/v1/calculateRnaught").then(
+	    	   function(response) {
+		    	$scope.message = response.data.message;
+		    	$scope.errorMsg = "";
+                $scope.reset();	
+		    }, function(rejection) {
+		    	$scope.errorMsg = rejection.data.message;
+		    	$scope.message = ""
+		    });
+	    }
+	 
+	    });
+		</script>
+		<div ng-app="calculateR0App" ng-controller="calculateR0Ctrl">
+			<div
+				style="float: left; width: 100%; border-left: 1px solid #bbb; padding-left: 3%; height: 100%; overflow-y: auto">
+				<h2 id="header0">View R0 Value</h2>
+				<form style="padding-left: 30px;">
+					<button ng-click="displayR0()" class="btn" name="submit">Calculate</button>
+				</form>
+				<div class="form-group">
+					<div name="success" class="text-success" style="white-space: pre;">{{message}}</div>
+					<div name="errorMsg" class="text-danger" style="white-space: pre;">{{errorMsg}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

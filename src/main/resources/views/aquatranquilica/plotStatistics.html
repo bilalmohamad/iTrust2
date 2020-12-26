@@ -1,0 +1,231 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{::script})">
+	<title>Plot Relevant Passenger Statistics</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+		<script th:inline="javascript">
+	    /* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+	    /*<![CDATA[*/
+	    	
+	    var app = angular.module("plotStatisticsApp", []);
+	    app.controller("plotStatisticsCtrl", function($scope, $http) {
+	    
+		    $scope.errorMsg = "";
+		    
+		    $scope.labels1 = [];
+		    $scope.data1 = [];
+	
+		    $scope.labels2 = [];
+		    $scope.data2 = [];
+		    
+		    $scope.labels3 = ['Not Infected', 'Mild', 'Severe', 'Critical'];
+		    $scope.data3 = [];
+		    
+		 	// This GET call receives the passenger data as a string.
+		    $http.get("/iTrust2/api/v1/plotStatistics/infectedPatientsPerDay").then(function(response) {
+		    		var index = 1;
+		    		
+		    		// Print an error message if there are no passengers in the database.
+		    		if (response.data.length < 1) {
+		    			$scope.errorMsg = "There is no passenger data to plot. Please ignore the headers below.";
+		    		} 
+		    		
+		    		// Plot the graphs is there is existing passenger data.
+		    		else {
+		    			parseList(response.data, index);
+			    		plot1();
+		    		}
+		    		
+		    	}, function(rejection) {
+		    		    $scope.errorMsg = "Could not plot the number of infected patients per day.";
+		    });
+	
+		    // This function makes a plot of number of infected patients per day using the 
+		    // parsed data. 
+		    // This function uses $scope.labels1 and $scope.data1 to make the graph.
+		    function plot1() {
+		    	var ctx1 = document.getElementById('myChart1').getContext('2d');
+		    	var chart1 = new Chart(ctx1, {
+		    	    // The type of chart we want to create
+		    	    type: 'line',
+	
+		    	    // The data for our dataset
+		    	    data: {
+		    	        labels: $scope.labels1,
+		    	        datasets: [{
+		    	            label: 'Infected Patients',
+		    	            backgroundColor: 'rgb(51, 122, 183)',
+		    	            data: $scope.data1
+		    	        }]
+		    	    },
+	
+		    	    // Configuration options go here
+		    	    options: {
+		    	    	maintainAspectRatio: false,
+		    	        responsive:false,
+		    	        scales: {
+		    	            yAxes: [{
+		    	                ticks: {
+		    	                    beginAtZero: true
+		    	                }
+		    	            }]
+		    	        }
+		    	    }
+		    	});
+		    }
+		    
+		 	// This GET call receives the passenger data as a string.
+	    	$http.get("/iTrust2/api/v1/plotStatistics/newInfectionsPerDay").then(
+	    		function(response) {
+	    			var index = 2;
+	    			
+	    			// Print an error message if there are no passengers in the database.
+		    		if (response.data.length < 1) {
+		    			$scope.errorMsg = "There is no passenger data to plot. Please ignore the headers below.";
+		    		} 
+		    		
+		    		// Plot the graphs is there is existing passenger data.
+		    		else {
+		    			parseList(response.data, index);
+		    			plot2();
+		    		}
+
+	    		}, function(rejection) {
+	    		    $scope.errorMsg = "Could not plot the number of new infections per day.";
+	    	});
+	
+		    // This function makes a plot of number of new infections patients per day 
+		    // using the parsed data. 
+		    // This function uses $scope.labels2 and $scope.data2 to make the graph.
+		    function plot2() {
+		    	var ctx2 = document.getElementById('myChart2').getContext('2d');
+		    	var chart2 = new Chart(ctx2, {
+		    	    // The type of chart we want to create
+		    	    type: 'bar',
+	
+		    	    // The data for our dataset
+		    	    data: {
+		    	        labels: $scope.labels2,
+		    	        datasets: [{
+		    	            label: 'Infected Patients',
+		    	            backgroundColor: 'rgb(51, 122, 183)',
+		    	            data: $scope.data2
+		    	        }]
+		    	    },
+	
+		    	    // Configuration options go here
+		    	    options: {
+		    	    	maintainAspectRatio: false,
+		    	        responsive:false,
+		    	        scales: {
+		    	            yAxes: [{
+		    	                ticks: {
+		    	                    beginAtZero: true
+		    	                }
+		    	            }]
+		    	        }
+		    	    }
+		    	});
+		    }
+		 	
+		 	// This GET call receives the passenger data as a string.
+	    	$http.get("/iTrust2/api/v1/plotStatistics/patientsBySeverity").then(
+	    		function(response) {
+	    			
+	    			// Print an error message if there are no passengers in the database.
+		    		if (response.data.length < 1) {
+		    			$scope.errorMsg = "There is no passenger data to plot. Please ignore the headers below.";
+		    		} 
+		    		
+		    		// Plot the graphs is there is existing passenger data.
+		    		else {
+		    			$scope.data3.push.apply($scope.data3, response.data);
+		    			plot3();
+		    		}
+	    			
+	    		}, function(rejection) {
+	    		    $scope.errorMsg = "Could not plot the number of patients by severity.";
+	    	});
+	
+		    // This function makes a plot of number of patients by severity 
+		    // using the parsed data. 
+		    // This function uses $scope.labels3 and $scope.data3 to make the graph.
+		    function plot3() {
+		    	var ctx3 = document.getElementById('myChart3').getContext('2d');
+		    	var chart3 = new Chart(ctx3, {
+		    	    // The type of chart we want to create
+		    	    type: 'pie',
+	
+		    	    // The data for our dataset
+		    	    data: {
+		    	        labels: $scope.labels3,
+		    	        datasets: [{
+		    	            backgroundColor: ['rgb(100, 100, 100)', 'rgb(51, 122, 183)', 'rgb(0, 0, 120)', 'rgb(0, 0, 50)'],
+		    	            data: $scope.data3
+		    	        }]
+		    	    },
+	
+		    	    // Configuration options go here
+		    	    options: {
+		    	    	maintainAspectRatio: false,
+		    	        responsive:false
+		    	    }
+		    	});
+	
+		    }
+	
+			// This function parses the array list received from back end,
+			// parsing done for each string in the array list.
+			// This function sets the appropriate data and labels arrays.
+		    function parseList(listOfStrings, index) {
+		      var labels = [];
+		      var data = [];
+		      var len = listOfStrings.length;
+		      
+		      for (i = 0; i < len; i++) { 
+		        parts = listOfStrings[i].split(',');
+		    	labels.push(parts[0]);
+		    	data.push(parts[1]);
+		      }
+		      
+		      if (index == 1) {
+		    	$scope.labels1.push.apply($scope.labels1, labels);
+		    	$scope.data1.push.apply($scope.data1, data);
+		      } else {
+		    	$scope.labels2.push.apply($scope.labels2, labels);
+		    	$scope.data2.push.apply($scope.data2, data);
+		      }
+		    }
+
+	    });
+		</script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+		<div ng-app="plotStatisticsApp" ng-controller="plotStatisticsCtrl">
+			<div
+				style="float: left; width: 100%; border-left: 1px solid #bbb; padding-left: 3%; height: 100%; overflow-y: auto">
+				<h2 id="header0">Plot Relevant Passenger Statistics</h2>
+				<br />	
+				<div class="text">
+					<h3 id="header1" style="color:red;">{{errorMsg}}</h3>
+				</div>		
+				<br />		
+				<div>
+					<h4 id="header2">Total Infected Passengers Over Time</h4>
+					<canvas id="myChart1" width="600" height="400"></canvas>
+		  		</div>
+		  		<br />
+		  		<div>
+		  			<h4 id="header3">New Infected Passengers Per Day</h4>
+					<canvas id="myChart2" width="600" height="400"></canvas>
+		  		</div>
+		  		<br />
+		  		<div>
+		  			<h4 id="header4">Patients by Severity</h4>
+					<canvas id="myChart3" width="600" height="400"></canvas>
+		  		</div>
+		  	</div>
+		</div>
+	</div>
+</body>
+</html>

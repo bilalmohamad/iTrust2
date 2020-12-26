@@ -1,0 +1,1 @@
+This file is a .txt file and should display an error message.

@@ -1,0 +1,66 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="layout :: head(title=~{::title},links=~{::script})">
+<title>Upload Passenger List</title>
+</head>
+<body th:include="layout :: body" th:with="content=~{::content}">
+	<div th:fragment="content">
+
+		<script th:inline="javascript">
+	    /* Otherwise Thymeleaf tries to parse Javascript as XML and breaks itself sometimes.  Sigh */
+	    /*<![CDATA[*/
+	    var app = angular.module("uploadPassengerListApp", []);
+	    app.controller("uploadPassengerListCtrl", function($scope, $http) {
+		
+	    $scope.message = "";
+	    $scope.errorMsg = "";
+	    
+	    // Function for dealing with a CSV upload
+        function submitCSV(file) {
+        	$http.post("/iTrust2/api/v1/passengerCSV", file).then(
+               		function success(response) {
+							$scope.message = response.data.message;
+							$scope.errorMsg = "";
+		                    $scope.reset();	
+						}, function failure(rejection) {
+							$scope.errorMsg = rejection.data.message;
+							$scope.message = ""
+						}
+					);	
+        }
+        
+        
+        // Function used to read a .csv file submitted by the user
+        $scope.getFile = function() {
+            var f = document.getElementById('file').files[0],
+            r = new FileReader();
+        	r.readAsText(f);
+        	
+        	r.onload = function(e) {
+        	    var rawLog = r.result;
+        	   // console.log(rawLog);
+        	    submitCSV(rawLog);
+        	};
+        }
+	    });
+		</script>
+
+
+
+		<div ng-app="uploadPassengerListApp" ng-controller="uploadPassengerListCtrl">
+			<div
+				style="float: left; width: 100%; border-left: 1px solid #bbb; padding-left: 3%; height: 100%; overflow-y: auto">
+				<h2 id="header0">Upload Passenger List</h2>
+					<form style="padding-left: 30px;">
+					  <span style="line-height: 2;"><strong>Select a file: </strong></span><input style="line-height: 2;" type="file" name="fileChoice" id ="file" value="Browse" accept=".csv" />
+				 	  <br>
+					  <button type="submit" name="submitCSVFile" ng-click="getFile()" class="btn btn-md btn-primary">Upload CSV</button>
+					</form>
+					<div class="form-group">
+						<div name="success" class="text-success" style="white-space: pre;">{{message}}</div>
+						<div name="errorMsg" class="text-danger" style="white-space: pre;">{{errorMsg}}</div>
+					</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
